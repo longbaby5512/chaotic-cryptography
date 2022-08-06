@@ -31,9 +31,9 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
 }
 
 
-std::string byte2hex(const bytes &, size_t);
+std::string byte2hex(const bytes &);
 bytes hex2byte(const std::string &);
-std::string bytes2string(const bytes &, size_t);
+std::string bytes2string(const bytes &);
 bytes string2bytes(const std::string &);
 
 template<typename ForwardIterator, typename Compare=std::less<typename std::iterator_traits<ForwardIterator>::value_type>>

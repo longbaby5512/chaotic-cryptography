@@ -8,17 +8,18 @@
 #include "Utils.h"
 
 
-
 class ChaoticMap {
 public:
-    virtual doubles sequence (const doubles&, size_t) = 0;
-    virtual doubles key(const bytes&) = 0;
+    virtual doubles sequence(const doubles &, size_t) = 0;
+
+    virtual doubles key(const bytes &) = 0;
+
     virtual std::string name() = 0;
 
     static std::unique_ptr<ChaoticMap> create(int);
 };
 
-class Logistic: public ChaoticMap {
+class Logistic : public ChaoticMap {
 public:
     doubles sequence(const doubles &, size_t) override;
 
@@ -27,7 +28,7 @@ public:
     std::string name() override;
 };
 
-class Sin: public ChaoticMap {
+class Sin : public ChaoticMap {
 public:
     doubles sequence(const doubles &, size_t) override;
 
