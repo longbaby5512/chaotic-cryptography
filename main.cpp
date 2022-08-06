@@ -1,8 +1,6 @@
 #include "ChaoticCypher.h"
-#include "Example.h"
 
 #include <random>
-#include <memory>
 #include <chrono>
 #include <fstream>
 
@@ -13,7 +11,7 @@ std::vector<byte> randomBytes(int length) {
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<> dis(0, 255);
-    std::for_each(std::execution::par, result.begin(), result.end(), [&](byte& b) {
+    std::for_each(result.begin(), result.end(), [&](byte &b) {
         b = dis(gen);
     });
     return result;
