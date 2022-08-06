@@ -1,11 +1,12 @@
 #include "ChaoticCypher.h"
-#include "AES.h"
 #include "Example.h"
 
 #include <random>
 #include <memory>
 #include <chrono>
 #include <fstream>
+
+void test();
 
 std::vector<byte> randomBytes(int length) {
     std::vector<byte> result(length);
@@ -26,96 +27,67 @@ std::string printByteArray(std::vector<byte>& bytes) {
     return result + "]";
 }
 
-bytes chaotic(bytes data);
-bytes aes(bytes data);
-
-const size_t byteCount = 1024 * 1024 * 10; // 10 MB
-
-std::vector<size_t> chaosEncryptTime;
-std::vector<size_t> chaosDecryptTime;
-
-std::vector<size_t> aesEncryptTime;
-std::vector<size_t> aesDecryptTime;
-
-void test1();
-
-int main() {
-    auto key = randomBytes(32);
-    auto iv = randomBytes(16);
-    auto cypher = AES();
-    auto start = std::chrono::high_resolution_clock::now();
-    std::cout << noimage.length() << std::endl;
-    auto encrypted = cypher.EncryptCBC(bytes(noimage.begin(), noimage.end()), key, iv);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << duration.count() << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    auto decrypted = cypher.DecryptCBC(encrypted, key, iv);
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << duration.count() << std::endl;
-
+bool check(std::vector<byte>& bytes, std::vector<byte>& expected) {
+    if (bytes.size() != expected.size()) {
+        return false;
+    }
+    for (int i = 0; i < bytes.size(); i++) {
+        if (bytes[i] != expected[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
-void test1() {
 
-    for (int i = 0; i < 10; i++) {
-        auto data = randomBytes(byteCount);
-        std::cout << "Test " << i + 1 << std::endl;
-        const bytes& data1 = data;
-        const bytes& data2 = data;
-        auto c = chaotic(data1);
-        auto a = aes(data2);
-        if (data != c) {
-            std::cout << "Chaotic at Test " << i + 1 << "Fail" << std::endl;
-        }
-        if (data != a) {
-            std::cout << "AES at Test " << i + 1 << "Fail" << std::endl;
+
+int main() {
+    test();
+}
+
+void test() {
+    std::vector<int> encryptTime;
+    std::vector<int> decryptTime;
+    int test_case = 10;
+    std::ofstream out_chaos("time_chaos.txt");
+    for (int i = 1; i <= test_case; ++i) {
+        std::cout << "\nTest case " << i << std::endl;
+        out_chaos << "\nTest case " << i << std::endl;
+        auto plaintext = randomBytes(10'000'000);
+        auto checktext = plaintext;
+        auto key = randomBytes(16);
+
+        auto cypher = ChaoticCypher();
+        cypher.init(ChaoticCypher::ENCRYPT_MODE, key);
+//        std::cout << "Cypher Info: " << cypher << std::endl;
+        auto start = std::chrono::system_clock::now();
+        auto ciphertext = cypher.doFinal(plaintext);
+        auto end = std::chrono::system_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Encryption time: " << duration.count() << " milliseconds" << std::endl;
+        out_chaos << "Encryption time: " << duration.count() << " milliseconds" << std::endl;
+        encryptTime.push_back(duration.count());
+
+        cypher.init(ChaoticCypher::DECRYPT_MODE, key);
+//        std::cout << "Cypher Info: " << cypher << std::endl;
+        start = std::chrono::system_clock::now();
+        auto decrypted = cypher.doFinal(ciphertext);
+        end = std::chrono::system_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Decryption time: " << duration.count() << " milliseconds" << std::endl;
+        out_chaos << "Decryption time: " << duration.count() << " milliseconds" << std::endl;
+        decryptTime.push_back(duration.count());
+
+        if (!check(decrypted, checktext)) {
+            std::cout << "Decrypted data is not the same as original data" << std::endl;
+            out_chaos << "Decrypted data is not the same as original data" << std::endl;
         }
 
     }
 
-    std::cout << "Chaotic cypher encrypt time: " << chaosEncryptTime << " with average " << std::accumulate(chaosEncryptTime.begin(), chaosEncryptTime.end(), 0) / chaosEncryptTime.size() << "ms" << std::endl;
-    std::cout << "Chaotic cypher decrypt time: " << chaosDecryptTime << " with average " << std::accumulate(chaosDecryptTime.begin(), chaosDecryptTime.end(), 0) / chaosDecryptTime.size() << "ms" << std::endl;
-    std::cout << "AES cypher encrypt time: " << aesEncryptTime << " with average " << std::accumulate(aesEncryptTime.begin(), aesEncryptTime.end(), 0) / aesEncryptTime.size() << "ms" << std::endl;
-    std::cout << "AES cypher decrypt time: " << aesDecryptTime << " with average " << std::accumulate(aesDecryptTime.begin(), aesDecryptTime.end(), 0) / aesDecryptTime.size() << "ms" << std::endl;
-}
-
-bytes chaotic(bytes data) {
-    auto key = randomBytes(32);
-    auto cypher = ChaoticCypher();
-    cypher.init(ChaoticCypher::ENCRYPT_MODE, key);
-    auto start = std::chrono::high_resolution_clock::now();
-    auto encrypted = cypher.doFinal(data);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    chaosEncryptTime.push_back(duration.count());
-
-    cypher.init(ChaoticCypher::DECRYPT_MODE, key);
-    start = std::chrono::high_resolution_clock::now();
-    auto decrypted = cypher.doFinal(encrypted);
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    chaosDecryptTime.push_back(duration.count());
-    return decrypted;
-}
-
-bytes aes(bytes data ){
-    auto key = randomBytes(32);
-    auto iv = randomBytes(16);
-    auto cypher = AES();
-    auto start = std::chrono::high_resolution_clock::now();
-    auto encrypted = cypher.EncryptCBC(data, key, iv);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    aesEncryptTime.push_back(duration.count());
-
-    start = std::chrono::high_resolution_clock::now();
-    auto decrypted = cypher.DecryptCBC(encrypted, key, iv);
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    aesDecryptTime.push_back(duration.count());
-
-    return decrypted;
+    std::cout << "\nAverage encryption time: " << std::accumulate(encryptTime.begin(), encryptTime.end(), 0) / encryptTime.size() << " milliseconds" << std::endl;
+    std::cout << "Average decryption time: " << std::accumulate(decryptTime.begin(), decryptTime.end(), 0) / decryptTime.size() << " milliseconds" << std::endl;
+    out_chaos << "\nAverage encryption time: " << std::accumulate(encryptTime.begin(), encryptTime.end(), 0) / encryptTime.size() << " milliseconds" << std::endl;
+    out_chaos << "Average decryption time: " << std::accumulate(decryptTime.begin(), decryptTime.end(), 0) / decryptTime.size() << " milliseconds" << std::endl;
+    out_chaos.close();
 }

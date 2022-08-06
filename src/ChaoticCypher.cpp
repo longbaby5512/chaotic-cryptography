@@ -35,6 +35,24 @@ void ChaoticCypher::permutation() {
     data = std::move(result);
 }
 
+void permutation(std::vector<uint8_t> &data, bool inverse, const std::vector<double> &key, std::unique_ptr<ChaoticMap> chaoticMap) {
+    auto len = data.size();
+    auto chaoticSequence = chaoticMap->sequence(key, len + 1000);
+    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + 1000);
+    assert(chaoticSequence.size() == len);
+    auto indices = argsort(chaoticSequence.begin(), chaoticSequence.end());
+    std::vector<uint8_t> result(len);
+    if (inverse) {
+        for (auto i = 0; i < len; ++i) {
+            result[indices[i]] = data[i];
+        }
+    } else {
+        for (auto i = 0; i < len; ++i) {
+            result[i] = data[indices[i]];
+        }
+    }
+}
+
 bytes ChaoticCypher::generateSBox() {
     auto iter = data.size() > ITER_GEN_SBOX_DEFAULT ? data.size() : ITER_GEN_SBOX_DEFAULT;
     auto chaoticSequence = subMap->sequence(keySub, iter + SBOX_SIZE);
@@ -132,9 +150,9 @@ bytes ChaoticCypher::doFinal(std::string &data) {
 
 void ChaoticCypher::init(int mode, const bytes &key) {
     setMode(mode);
-    std::unique_ptr<Hash> hash = std::make_unique<SHA256>();
-    hash->update(key);
-    setKey(hash->digest());
+    std::unique_ptr<Hash> sha256 = std::make_unique<SHA256>();
+    sha256->update(key);
+    setKey(sha256->digest());
 
 }
 
@@ -143,9 +161,13 @@ void ChaoticCypher::setMode(int mode) {
 }
 
 void ChaoticCypher::setKey(bytes hash) {
-    keyPerm = permMap->key(bytes(hash.begin(), hash.begin() + hash.size() / 2));
-    keySub = subMap->key(bytes(hash.begin() + hash.size() / 2, hash.end()));
-    keyDiff = diffMap->key(hash);
+    std::unique_ptr<Hash> sha256 = std::make_unique<SHA256>();
+    sha256->update(bytes(hash.begin(), hash.begin() + hash.size() / 2));
+    keyPerm = permMap->key(sha256->digest());
+    sha256->update(bytes(hash.begin() + hash.size() / 2, hash.end()));
+    keySub = subMap->key(sha256->digest());
+    sha256->update(hash);
+    keyDiff = diffMap->key(sha256->digest());
 }
 
 void ChaoticCypher::init(int mode, const std::string & key) {

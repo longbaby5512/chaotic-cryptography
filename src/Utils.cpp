@@ -7,11 +7,11 @@
 #include <sstream>
 #include <iomanip>
 
-std::string byte2hex(const bytes& digest, size_t length) {
+std::string byte2hex(const bytes& digest) {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
-    for (size_t i = 0; i < length; i++) {
-        ss << std::setw(2) << (int) digest[i];
+    for (unsigned char i : digest) {
+        ss << std::setw(2) << (int) i;
     }
     return ss.str();
 }
@@ -25,9 +25,9 @@ bytes hex2byte(const std::string& hexStr) {
     return digest;
 }
 
-std::string bytes2string(const bytes& data, size_t length) {
+std::string bytes2string(const bytes& data) {
     std::string res;
-    std::for_each(data.begin(), data.begin() + length, [&](byte b) {
+    std::for_each(data.begin(), data.begin() + data.size(), [&](byte b) {
         res += static_cast<char>(b);
     });
     return res;
