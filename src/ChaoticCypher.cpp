@@ -10,16 +10,10 @@ ChaoticCypher::ChaoticCypher(std::unique_ptr<ChaoticMap> permMap, std::unique_pt
     this->diffMap = std::move(diffMap);
 }
 
-ChaoticCypher::ChaoticCypher(ChaoticMap *permMap, ChaoticMap *subMap, ChaoticMap *diffMap) {
-    this->permMap = std::unique_ptr<ChaoticMap>(permMap);
-    this->subMap = std::unique_ptr<ChaoticMap>(subMap);
-    this->diffMap = std::unique_ptr<ChaoticMap>(diffMap);
-}
-
 void ChaoticCypher::permutation() {
     auto len = data.size();
     auto chaoticSequence = permMap->sequence(keyPerm, len + IGNORE_ELEMENTS);
-    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + IGNORE_ELEMENTS);
+    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + static_cast<long>(IGNORE_ELEMENTS));
     assert(chaoticSequence.size() == len);
     auto indices = argsort(chaoticSequence.begin(), chaoticSequence.end());
     bytes result(len);
@@ -35,7 +29,8 @@ void ChaoticCypher::permutation() {
     data = std::move(result);
 }
 
-void permutation(std::vector<uint8_t> &data, bool inverse, const std::vector<double> &key, std::unique_ptr<ChaoticMap> chaoticMap) {
+void permutation(std::vector<uint8_t> &data, bool inverse, const std::vector<double> &key,
+                 std::unique_ptr<ChaoticMap> chaoticMap) {
     auto len = data.size();
     auto chaoticSequence = chaoticMap->sequence(key, len + 1000);
     chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + 1000);
@@ -56,7 +51,7 @@ void permutation(std::vector<uint8_t> &data, bool inverse, const std::vector<dou
 bytes ChaoticCypher::generateSBox() {
     auto iter = data.size() > ITER_GEN_SBOX_DEFAULT ? data.size() : ITER_GEN_SBOX_DEFAULT;
     auto chaoticSequence = subMap->sequence(keySub, iter + SBOX_SIZE);
-    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + iter);
+    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + static_cast<long>(iter));
     assert(chaoticSequence.size() == SBOX_SIZE);
     auto indices = argsort(chaoticSequence.begin(), chaoticSequence.end());
     if (mode == ENCRYPT_MODE)
@@ -75,7 +70,7 @@ void ChaoticCypher::substitution() {
     auto len = data.size();
     bytes result(len);
     size_t index = 0;
-    std::for_each(result.begin(), result.end(), [&](byte& element) {
+    std::for_each(result.begin(), result.end(), [&](byte &element) {
         element = sbox[data[index++]];
     });
     data = std::move(result);
@@ -84,7 +79,7 @@ void ChaoticCypher::substitution() {
 void ChaoticCypher::diffusion() {
     auto len = data.size();
     auto chaoticSequence = diffMap->sequence(keyDiff, len + IGNORE_ELEMENTS);
-    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + IGNORE_ELEMENTS);
+    chaoticSequence.erase(chaoticSequence.begin(), chaoticSequence.begin() + static_cast<long>(IGNORE_ELEMENTS));
     assert(chaoticSequence.size() == len);
     auto minMax = std::minmax_element(chaoticSequence.begin(), chaoticSequence.end());
     auto min = *minMax.first;
@@ -94,7 +89,7 @@ void ChaoticCypher::diffusion() {
         data[0] = data[0] ^ static_cast<byte>(254 * (chaoticSequence[0] - min) / (max - min));
         auto last = data[0];
         size_t index = 1;
-        std::for_each(data.begin() + 1, data.end(), [&](byte& element) {
+        std::for_each(data.begin() + 1, data.end(), [&](byte &element) {
             element = element ^ last ^ static_cast<byte>(254 * (chaoticSequence[index] - min) / (max - min));
             last = element;
         });
@@ -102,9 +97,9 @@ void ChaoticCypher::diffusion() {
         auto last = data[0];
         data[0] = data[0] ^ static_cast<byte>(254 * (chaoticSequence[0] - min) / (max - min));
         size_t index = 1;
-        std::for_each(data.begin() + 1, data.end(), [&](byte& element) {
+        std::for_each(data.begin() + 1, data.end(), [&](byte &element) {
             auto tmp = element;
-            element = element ^last^ static_cast<byte>(254 * (chaoticSequence[index] - min) / (max - min));
+            element = element ^ last ^ static_cast<byte>(254 * (chaoticSequence[index] - min) / (max - min));
             last = tmp;
         });
     }
@@ -162,24 +157,25 @@ void ChaoticCypher::setMode(int mode) {
 
 void ChaoticCypher::setKey(bytes hash) {
     std::unique_ptr<Hash> sha256 = std::make_unique<SHA256>();
-    sha256->update(bytes(hash.begin(), hash.begin() + hash.size() / 2));
+    sha256->update(bytes(hash.begin(), hash.begin() + static_cast<long>(hash.size() / 2)));
     keyPerm = permMap->key(sha256->digest());
-    sha256->update(bytes(hash.begin() + hash.size() / 2, hash.end()));
+    sha256->update(bytes(hash.begin() + static_cast<long>(hash.size() / 2), hash.end()));
     keySub = subMap->key(sha256->digest());
     sha256->update(hash);
     keyDiff = diffMap->key(sha256->digest());
 }
 
-void ChaoticCypher::init(int mode, const std::string & key) {
+void ChaoticCypher::init(int mode, const std::string &key) {
     init(mode, bytes(key.begin(), key.end()));
 }
 
-std::ostream &operator<<(std::ostream & os, const ChaoticCypher &cypher) {
-    std:: string mode = cypher.mode == ChaoticCypher::ENCRYPT_MODE ? "ENCRYPT" : "DECRYPT";
+std::ostream &operator<<(std::ostream &os, const ChaoticCypher &cypher) {
+    std::string mode = cypher.mode == ChaoticCypher::ENCRYPT_MODE ? "ENCRYPT" : "DECRYPT";
     std::string algPerm = cypher.permMap->name();
     std::string algSub = cypher.subMap->name();
     std::string algDiff = cypher.diffMap->name();
-    os << "ChaoticCypher{mode:" << mode << ", key:{" << algPerm << cypher.keyPerm << ", " << algSub << cypher.keySub << ", " << algDiff << cypher.keyDiff << "}";
+    os << "ChaoticCypher{mode:" << mode << ", key:{" << algPerm << cypher.keyPerm << ", " << algSub << cypher.keySub
+       << ", " << algDiff << cypher.keyDiff << "}";
     return os;
 }
 

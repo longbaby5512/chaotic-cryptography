@@ -16,7 +16,12 @@ public:
 
     virtual std::string name() = 0;
 
+    virtual ~ChaoticMap() = default;
+
     static std::unique_ptr<ChaoticMap> create(int);
+
+protected:
+    static void outOfRange(double &, double, double, double);
 };
 
 class Logistic : public ChaoticMap {
@@ -26,6 +31,8 @@ public:
     doubles key(const bytes &) override;
 
     std::string name() override;
+
+    ~Logistic() override = default;
 };
 
 class Sin : public ChaoticMap {
@@ -35,6 +42,8 @@ public:
     doubles key(const bytes &) override;
 
     std::string name() override;
+
+    ~Sin() override = default;
 
 };
 

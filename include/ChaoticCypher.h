@@ -44,19 +44,10 @@ public:
             std::unique_ptr<ChaoticMap> diffMap = std::make_unique<Logistic>()
     );
 
-    ChaoticCypher(ChaoticMap* permMap,ChaoticMap* subMap,ChaoticMap* diffMap);
 
-
-public:
+private:
     void setMode(int);
-
-    auto getData() const -> const bytes & {
-        return data;
-    }
-
-    void setData(const bytes &data) {
-        this->data = data;
-    }
+    void setKey(bytes key);
 
     bytes generateSBox();
     void permutation();
@@ -69,9 +60,6 @@ private:
     const size_t IGNORE_ELEMENTS = 1000;
     const size_t ITER_GEN_SBOX_DEFAULT = 1000;
     const size_t SBOX_SIZE = 256;
-
-
-    void setKey(bytes key);
 };
 
 
