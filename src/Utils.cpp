@@ -67,6 +67,7 @@ std::vector<byte> convertDoubleToByteArray(double data){
 }
 
 double convertByteArrayToDouble(const std::vector<byte> & data) {
+    assert(data.size() == sizeof(double));
     double res = 0;
     auto *ptr = reinterpret_cast<byte *>(&res);
     for (int i = 0; i < sizeof(double); ++i) {
@@ -76,11 +77,17 @@ double convertByteArrayToDouble(const std::vector<byte> & data) {
 }
 
 
-
 int sumOfByteArray(const bytes &data) {
     int res = 0;
     for (byte b: data) {
         res += b;
     }
     return res;
+}
+
+double xorDouble(double a, double b) {
+    unsigned long long a_ = *reinterpret_cast<unsigned long long *>(&a);
+    unsigned long long b_ = *reinterpret_cast<unsigned long long *>(&b);
+    unsigned long long res = a_ ^ b_;
+    return *reinterpret_cast<double *>(&res);
 }

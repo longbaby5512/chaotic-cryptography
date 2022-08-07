@@ -43,8 +43,8 @@ void findAllKey();
 
 int main() {
 //    double a = 4.5;
-//    double a2 = convertBetween(a, 0.0, 4.0);
-//    std::cout << a2 << std::endl;
+//    double b = 1.2;
+//    std::cout << xorDouble(a, b) << std::endl;
 
 
     test();
@@ -106,7 +106,7 @@ void test() {
     for (int i = 1; i <= test_case; ++i) {
         std::cout << "\nTest case " << i << std::endl;
         out_chaos << "\nTest case " << i << std::endl;
-        auto plaintext = randomBytes(100'000'000);
+        auto plaintext = randomBytes(10'000'000);
         auto checktext = plaintext;
         auto key = randomBytes(16);
 

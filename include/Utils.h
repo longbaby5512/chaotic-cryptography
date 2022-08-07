@@ -62,13 +62,15 @@ void convertBetween(T &value, const T &min, const T &max) {
 }
 
 template<typename T>
-void convertBetween(T &value, const T& minSrc, const T& maxSrc, const T &minDes, const T &maxDes) {
-    value =  minDes + std::fmod(value - minSrc, maxSrc - minSrc) * (maxDes - minDes) / (maxSrc - minSrc);
+void convertBetween(T &value, const T &minSrc, const T &maxSrc, const T &minDes, const T &maxDes) {
+    value = minDes + std::fmod(value - minSrc, maxSrc - minSrc) * (maxDes - minDes) / (maxSrc - minSrc);
 }
 
 template<typename Base, typename T>
 inline bool instanceof(std::unique_ptr<T> &ptr) {
     return dynamic_cast<Base *>(ptr.get()) != nullptr;
 }
+
+double xorDouble(double a, double b);
 
 #endif //CHAOTIC_UTILS_H
