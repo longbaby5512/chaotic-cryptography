@@ -12,6 +12,7 @@
 #include <execution>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 typedef unsigned char byte;
 typedef std::vector<byte> bytes;
@@ -31,10 +32,16 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
 }
 
 
-std::string byte2hex(const bytes &);
-bytes hex2byte(const std::string &);
-std::string bytes2string(const bytes &);
-bytes string2bytes(const std::string &);
+std::string convertByteArrayToHexString(const bytes &);
+bytes convertHexStringToByteArray(const std::string &);
+std::string convertByteArrayToAscii(const bytes &);
+bytes convertAsciiToByteArray(const std::string &);
+
+std::vector<int> convertByteToBitArray(byte);
+byte convertBitArrayToByte(const std::vector<int> &);
+
+std::vector<byte> convertDoubleToByteArray(double);
+double convertByteArrayToDouble(const std::vector<byte> &);
 
 template<typename ForwardIterator, typename Compare=std::less<typename std::iterator_traits<ForwardIterator>::value_type>>
 std::vector<size_t> argsort(ForwardIterator first, ForwardIterator last, Compare comp = Compare()) {
@@ -47,9 +54,23 @@ std::vector<size_t> argsort(ForwardIterator first, ForwardIterator last, Compare
     return indices;
 }
 
+int sumOfByteArray(const bytes &);
+
+template<typename T>
+void convertBetween(T &value, const T &min, const T &max) {
+    value = min + std::fmod(value - min, max - min);
+}
+
+template<typename T>
+void convertBetween(T &value, const T &minSrc, const T &maxSrc, const T &minDes, const T &maxDes) {
+    value = minDes + (value - minSrc) * (maxDes - minDes) / (maxSrc - minSrc);
+}
+
 template<typename Base, typename T>
 inline bool instanceof(std::unique_ptr<T> &ptr) {
     return dynamic_cast<Base *>(ptr.get()) != nullptr;
 }
+
+double xorDouble(double a, double b);
 
 #endif //CHAOTIC_UTILS_H
