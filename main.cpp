@@ -47,7 +47,10 @@ int main() {
 //    std::cout << xorDouble(a, b) << std::endl;
 
 
-    test();
+    for (int i = 0; i < 10; i++) {
+        std::cout << i << " " << std::endl;
+        test1();
+    }
 
 }
 

@@ -63,7 +63,7 @@ void convertBetween(T &value, const T &min, const T &max) {
 
 template<typename T>
 void convertBetween(T &value, const T &minSrc, const T &maxSrc, const T &minDes, const T &maxDes) {
-    value = minDes + std::fmod(value - minSrc, maxSrc - minSrc) * (maxDes - minDes) / (maxSrc - minSrc);
+    value = minDes + (value - minSrc) * (maxDes - minDes) / (maxSrc - minSrc);
 }
 
 template<typename Base, typename T>
